@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import ProductList from './components/ProductList';
 import ShoppingCart from './components/ShoppingCart';
 import CheckoutForm from './components/CheckoutForm';
 import OrderConfirmation from './components/OrderConfirmation';
 import { PRODUCTS, SHIPPING_OPTIONS } from './data/products';
+import { getProducts, getCategories } from './services/api';
 
 export default function App() {
   // Current Step: 1 = Products, 2 = Shopping Cart, 3 = Checkout Form, 4 = Order Confirmation
   const [currentStep, setStep] = useState(1);
+
+  // Products & Categories loaded from Laravel API
+  const [products, setProducts] = useState(PRODUCTS);
+  const [categories, setCategories] = useState([]);
+  const [apiConnected, setApiConnected] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   // Cart State (starts fresh and empty)
   const [cart, setCart] = useState([]);
@@ -32,6 +39,39 @@ export default function App() {
   // Placed Order Snapshot
   const [placedOrder, setPlacedOrder] = useState(null);
   const [orderCounter, setOrderCounter] = useState(1);
+
+  // Fetch products and categories from Laravel API
+  const fetchApiData = useCallback(async () => {
+    try {
+      setLoadingProducts(true);
+      const [productsResult, categoriesResult] = await Promise.allSettled([
+        getProducts(),
+        getCategories(),
+      ]);
+
+      if (productsResult.status === 'fulfilled' && productsResult.value && productsResult.value.length > 0) {
+        setProducts(productsResult.value);
+        setApiConnected(true);
+      } else {
+        // Fallback to static PRODUCTS
+        setProducts(PRODUCTS);
+        setApiConnected(false);
+      }
+
+      if (categoriesResult.status === 'fulfilled' && categoriesResult.value) {
+        setCategories(categoriesResult.value);
+      }
+    } catch {
+      setProducts(PRODUCTS);
+      setApiConnected(false);
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchApiData();
+  }, [fetchApiData]);
 
   // Add product to cart
   const handleAddToCart = (product) => {
@@ -119,11 +159,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Clean Navbar matching PDF screenshot */}
+      {/* Clean Navbar */}
       <Navbar
         currentStep={currentStep}
         setStep={setStep}
         cartItemsCount={totalCartCount}
+        apiConnected={apiConnected}
       />
 
       {/* Main Page Content based on Step */}
@@ -131,6 +172,11 @@ export default function App() {
         {/* Step 1: Products List */}
         {currentStep === 1 && (
           <ProductList
+            products={products}
+            categories={categories}
+            apiConnected={apiConnected}
+            loading={loadingProducts}
+            onRefresh={fetchApiData}
             cart={cart}
             onAddToCart={handleAddToCart}
             onUpdateQuantity={handleUpdateQuantity}

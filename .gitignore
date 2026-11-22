@@ -12,11 +12,19 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
+# Frontend ignore
+frontend/node_modules/
+frontend/dist/
+
+# Backend ignore
 backend API/
 backend-api/vendor/
 backend-api/node_modules/
 backend-api/.env
+backend/vendor/
+backend/node_modules/
+backend/.env
+
 .vscode/*
 !.vscode/extensions.json
 .idea

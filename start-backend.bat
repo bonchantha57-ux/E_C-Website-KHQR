@@ -1,5 +1,5 @@
 @echo off
-title RGB Store - Laravel Backend API
+title RGB Store - Laravel Backend API & Admin
 echo ========================================================
 echo   Starting MySQL (XAMPP) and Laravel Backend API...
 echo ========================================================
@@ -15,13 +15,19 @@ if "%ERRORLEVEL%"=="0" (
     timeout /t 2 /nobreak >nul
 )
 
-:: Run Laravel Server
-cd /d "%~dp0backend-api"
+:: Run Laravel Server in backend folder
+if exist "%~dp0backend" (
+    cd /d "%~dp0backend"
+) else (
+    cd /d "%~dp0backend-api"
+)
+
 echo.
 echo ========================================================
-echo   Backend API is running on: http://127.0.0.1:8000
-echo   - Categories API: http://127.0.0.1:8000/api/categories
-echo   - Products API:   http://127.0.0.1:8000/api/products
+echo   Laravel Server is running on: http://127.0.0.1:8000
+echo   - Admin Panel:    http://127.0.0.1:8000/admin
+echo   - API Categories: http://127.0.0.1:8000/api/categories
+echo   - API Products:   http://127.0.0.1:8000/api/products
 echo ========================================================
 echo.
 php artisan serve --port=8000
